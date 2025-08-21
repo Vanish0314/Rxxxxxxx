@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Linq;
+using System.Text;
 
 namespace Rxxxxxxx
 {
@@ -203,6 +204,8 @@ namespace Rxxxxxxx
 
         static void Main()
         {
+            Console.OutputEncoding = Encoding.UTF8;
+            Console.InputEncoding = Encoding.UTF8;
             Console.WriteLine("文件系统监控示例");
             Console.WriteLine("==================");
 
