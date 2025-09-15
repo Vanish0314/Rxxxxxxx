@@ -469,6 +469,26 @@ static class Program
 
         Console.WriteLine("================================");
         Console.WriteLine("=== Testing VanishImmediateScheduler ===");
+        TestSchedulerWithSubscribeOn(
+            new VanishImmediateScheduler(),
+            new VanishEventLoopScheduler(),
+            "Immediate"
+        );
+        Console.WriteLine("=== Testing VanishImmediateScheduler Done ===");
+        Console.WriteLine("================================\n\n\n");
+
+        Console.WriteLine("================================");
+        Console.WriteLine("=== Testing VanishCurrentThreadScheduler ===");
+        TestSchedulerWithSubscribeOn(
+            new VanishCurrentThreadScheduler(),
+            new VanishEventLoopScheduler(),
+            "CurrentThread"
+        );
+        Console.WriteLine("=== Testing VanishCurrentThreadScheduler Done ===");
+        Console.WriteLine("================================\n\n\n");
+
+        Console.WriteLine("================================");
+        Console.WriteLine("=== Testing VanishImmediateScheduler ===");
         TestScheduler(new VanishImmediateScheduler(), "Immediate");
         Console.WriteLine("=== Testing VanishImmediateScheduler Done ===");
         Console.WriteLine("================================\n\n\n");
@@ -496,10 +516,33 @@ static class Program
                     Console.WriteLine(
                         $"[T:{Environment.CurrentManagedThreadId}] {name} Tick {tick}"
                     ),
-                () => Console.WriteLine($"{name} completed\n")
+                () => Console.WriteLine($"{name} Ticking completed\n")
             );
 
-        Console.WriteLine($"{name} completed\n");
+        Console.WriteLine($"{name} completed");
+
+        // Give some time for async schedulers to complete
+        Thread.Sleep(10000);
+    }
+
+    private static void TestSchedulerWithSubscribeOn(
+        IScheduler scheduler,
+        IScheduler subscribeOnScheduler,
+        string name
+    )
+    {
+        Console.WriteLine(
+            $"Testing {name} Scheduler with SubscribeOn on {subscribeOnScheduler.GetType().Name}"
+        );
+
+        VanishInterval(TimeSpan.FromMilliseconds(1000), scheduler)
+            .Take(5)
+            .SubscribeOn(subscribeOnScheduler)
+            .Subscribe(tick =>
+                Console.WriteLine($"[T:{Environment.CurrentManagedThreadId}] {name} Tick {tick}")
+            );
+
+        Console.WriteLine($"{name} Ticking completed");
 
         // Give some time for async schedulers to complete
         Thread.Sleep(10000);
