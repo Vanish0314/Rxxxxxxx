@@ -35,4 +35,23 @@ Observable
 Console.WriteLine(new string('=', 60));
 Console.WriteLine("Subscribe returned - press Enter to exit");
 Console.WriteLine(new string('=', 60));
+
+Observable
+    .Range(1, 5, NewThreadScheduler.Default)
+    .Subscribe(static x =>
+        Console.WriteLine($"OnNext {x} (Thread {Environment.CurrentManagedThreadId})")
+    );
+
+Observable
+    .Range(1, 5, NewThreadScheduler.Default)
+    .Subscribe(static x =>
+        Console.WriteLine($"OnNext {x} (Thread {Environment.CurrentManagedThreadId})")
+    );
+
+Observable
+    .Range(1, 5, NewThreadScheduler.Default)
+    .Subscribe(static x =>
+        Console.WriteLine($"OnNext {x} (Thread {Environment.CurrentManagedThreadId})")
+    );
+
 Console.ReadLine();
