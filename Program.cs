@@ -1,57 +1,38 @@
 ﻿using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 
-Console.WriteLine("Quiescent 示例 - 检测事件流的静默期");
-Console.WriteLine("=====================================");
+static void Log(string tag, object? value) =>
+    Console.WriteLine(
+        $"[{DateTime.Now:HH:mm:ss.fff}] {tag, -22} | value={value, -4} | thread={Environment.CurrentManagedThreadId}"
+    );
 
-Int32 eventCount = 0;
+Console.WriteLine(new string('=', 60));
+Console.WriteLine($"Main thread: {Environment.CurrentManagedThreadId}");
+Console.WriteLine(new string('-', 60));
+Console.WriteLine("Immediate SelectMany (ImmediateScheduler)");
+Console.WriteLine(new string('-', 60));
 
-var random = new Random();
-var eventStream = Observable.Create<int>(observer =>
-{
-    return Observable
-        .Interval(TimeSpan.FromMilliseconds(500))
-        .Subscribe(_ =>
-        {
-            if (random.Next(100) < 30) // 30% 的概率生成事件
-            {
-                var delay = random.Next(0, 5000); // 0-5秒的随机延迟
+Observable
+    .Range(1, 5)
+    .SelectMany(i => Observable.Range(i * 10, 5, ImmediateScheduler.Instance))
+    .Subscribe(m => Log("Immediate.SelectMany", m));
 
-                Observable
-                    .Timer(TimeSpan.FromMilliseconds(delay))
-                    .Subscribe(__ => observer.OnNext(eventCount++));
-            }
-        });
-});
+Console.WriteLine(new string('-', 60));
+Console.WriteLine("TaskPool Range (TaskPoolScheduler.Default)");
+Console.WriteLine(new string('-', 60));
 
-var quiescentStream = eventStream.Quiescent(TimeSpan.FromSeconds(1), Scheduler.Default);
+Observable.Range(1, 5, TaskPoolScheduler.Default).Subscribe(m => Log("TaskPool.Range", m));
 
-eventStream.Subscribe(eventId =>
-    Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] 事件: {eventId}")
-);
+Console.WriteLine(new string('-', 60));
+Console.WriteLine("TaskPool SelectMany (TaskPoolScheduler.Default)");
+Console.WriteLine(new string('-', 60));
 
-quiescentStream.Subscribe(events =>
-{
-    if (events.Count > 0)
-    {
-        Console.WriteLine(
-            $"\n[{DateTime.Now:HH:mm:ss.fff}] 静默期结束！收集到 {events.Count} 个事件:"
-        );
-        foreach (var evt in events)
-        {
-            Console.WriteLine($"  - 事件 {evt}");
-        }
-        Console.WriteLine();
-    }
-    else
-    {
-        Console.WriteLine($"\n[{DateTime.Now:HH:mm:ss.fff}] 静默期结束（无事件）");
-    }
-});
+Observable
+    .Range(1, 5)
+    .SelectMany(i => Observable.Range(i * 10, 5, TaskPoolScheduler.Default))
+    .Subscribe(m => Log("TaskPool.SelectMany", m));
 
-Console.WriteLine("程序运行中... 按任意键退出");
-Console.WriteLine("静默期设置为 2 秒");
-Console.WriteLine("事件以随机间隔（0-5秒）生成");
-Console.WriteLine("=====================================\n");
-
-while (true) { }
+Console.WriteLine(new string('=', 60));
+Console.WriteLine("Subscribe returned - press Enter to exit");
+Console.WriteLine(new string('=', 60));
+Console.ReadLine();
