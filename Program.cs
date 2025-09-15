@@ -365,6 +365,85 @@ class VanishNewThreadScheduler : IScheduler
     }
 }
 
+static class VanishRxExtensions
+{
+    /// <summary>
+    /// Controls the scheduler on which the source observable is subscribed to.
+    /// This affects where the subscription logic (OnSubscribe) runs.
+    /// </summary>
+    public static IObservable<T> VanishSubscribeOn<T>(
+        this IObservable<T> source,
+        IScheduler scheduler
+    )
+    {
+        return Observable.Create<T>(observer =>
+        {
+            Console.WriteLine(
+                $"[T:{Environment.CurrentManagedThreadId}] VanishSubscribeOn: Scheduling subscription on {scheduler.GetType().Name}"
+            );
+
+            var subscription = new SerialDisposable();
+
+            var scheduledWork = scheduler.Schedule(() =>
+            {
+                Console.WriteLine(
+                    $"[T:{Environment.CurrentManagedThreadId}] VanishSubscribeOn: Executing subscription on {scheduler.GetType().Name}"
+                );
+
+                subscription.Disposable = source.Subscribe(observer);
+            });
+
+            return new CompositeDisposable(subscription, scheduledWork);
+        });
+    }
+
+    public static IObservable<T> VanishObserveOn<T>(
+        this IObservable<T> source,
+        IScheduler scheduler
+    )
+    {
+        return Observable.Create<T>(observer =>
+        {
+            Console.WriteLine(
+                $"[T:{Environment.CurrentManagedThreadId}] VanishObserveOn: Setting up observation on {scheduler.GetType().Name}"
+            );
+
+            return source.Subscribe(
+                onNext: value =>
+                {
+                    scheduler.Schedule(() =>
+                    {
+                        Console.WriteLine(
+                            $"[T:{Environment.CurrentManagedThreadId}] VanishObserveOn: Delivering OnNext({value}) on {scheduler.GetType().Name}"
+                        );
+                        observer.OnNext(value);
+                    });
+                },
+                onError: error =>
+                {
+                    scheduler.Schedule(() =>
+                    {
+                        Console.WriteLine(
+                            $"[T:{Environment.CurrentManagedThreadId}] VanishObserveOn: Delivering OnError on {scheduler.GetType().Name}"
+                        );
+                        observer.OnError(error);
+                    });
+                },
+                onCompleted: () =>
+                {
+                    scheduler.Schedule(() =>
+                    {
+                        Console.WriteLine(
+                            $"[T:{Environment.CurrentManagedThreadId}] VanishObserveOn: Delivering OnCompleted on {scheduler.GetType().Name}"
+                        );
+                        observer.OnCompleted();
+                    });
+                }
+            );
+        });
+    }
+}
+
 static class Program
 {
     public static void Main()
