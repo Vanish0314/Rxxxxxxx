@@ -47,7 +47,7 @@ jobs:
           cat app_output.txt | sed -e 's/\r$//'
           echo "---END-OUTPUT---"
 
-      - name: Append section to README.md
+      - name: Build README section content
         id: updatereadme
         shell: bash
         run: |
@@ -55,22 +55,53 @@ jobs:
           TAG_NAME="${GITHUB_REF_NAME}"
           echo "Preparing README update for tag: ${TAG_NAME}"
 
-          PROGRAM_CS_CONTENT=$(cat Program.cs | sed -e 's/\\/\\\\/g')
-          APP_OUTPUT=$(cat app_output.txt | sed -e 's/\\/\\\\/g')
+          # Read Program.cs and output
+          PROGRAM_CS_CONTENT=$(cat Program.cs)
+          APP_OUTPUT=$(cat app_output.txt)
 
+          # Extract description from Desc.md if exists: take content under heading "## <tag>" until next heading
+          DESC_CONTENT=""
+          if [[ -f "Desc.md" ]]; then
+            # Use awk to capture lines between heading matching the tag and the next heading
+            DESC_CONTENT=$(awk -v tag="$TAG_NAME" '
+              BEGIN { capture=0 }
+              /^##[[:space:]]+/ {
+                if (capture==1) { exit }
+                # Normalize heading text (strip leading ## and spaces)
+                head=$0
+                sub(/^##[[:space:]]+/, "", head)
+                sub(/[[:space:]]+$/, "", head)
+                if (head==tag) { capture=1; next }
+              }
+              {
+                if (capture==1) print $0
+              }
+            ' Desc.md)
+          fi
+
+          # Ensure README has the anchor "# 示例" after manual section; if not, append it
+          if ! grep -q "^# 示例$" README.md; then
+            echo -e "\n# 示例" >> README.md
+          fi
+
+          # Build the section content with proper Markdown fences
           {
             echo "";
-            echo "## Tag";
-            echo "";
+            echo "## ${TAG_NAME}";
+            if [[ -n "${DESC_CONTENT}" ]]; then
+              echo "";
+              echo "${DESC_CONTENT}";
+              echo "";
+            fi
             echo "### 示例代码";
-            echo "···";
+            echo '```c#';
             echo "${PROGRAM_CS_CONTENT}";
-            echo "···";
+            echo '```';
             echo "";
             echo "### 输出";
-            echo "···";
+            echo '```';
             echo "${APP_OUTPUT}";
-            echo "···";
+            echo '```';
           } >> README.md
 
           echo "README.md updated.";
