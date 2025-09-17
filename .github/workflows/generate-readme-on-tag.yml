@@ -3,7 +3,7 @@ name: Generate README on tag
 on:
   push:
     tags:
-      - '*'
+      - 'sample/*'
 
 permissions:
   contents: write
