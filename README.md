@@ -104,3 +104,33 @@ Console.WriteLine(
 [A][T:5] 09/17/2025 14:24:43: Tick 8
 [B][T:7] 09/17/2025 14:24:43: Tick 8
 ```
+
+## sample/Delay操作符不延迟订阅而是延迟转发
+### 示例代码
+```c#
+﻿using System.Reactive;
+using System.Reactive.Linq;
+
+IObservable<Timestamped<long>> source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .Take(5)
+    .Timestamp();
+
+IObservable<Timestamped<long>> delay = source.Delay(TimeSpan.FromSeconds(2));
+
+delay.Subscribe(
+    value =>
+        Console.WriteLine(
+            $"Item {value.Value} with timestamp {value.Timestamp} received at {DateTimeOffset.Now}"
+        ),
+    () => Console.WriteLine("delay Completed")
+);
+
+Console.WriteLine("Press Enter to exit");
+Console.ReadLine();
+```
+
+### 输出
+```
+Press Enter to exit
+```
