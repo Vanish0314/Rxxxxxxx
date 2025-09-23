@@ -29,19 +29,19 @@ jobs:
           dotnet restore
           dotnet build -c Release --nologo
 
-      - name: Run program with 10s timeout and capture output
+      - name: Run program with 60s timeout and capture output
         id: runapp
         shell: bash
         run: |
           set -euo pipefail
-          # Try to run the executable for up to 10 seconds
-          echo "Running application for up to 10 seconds to capture output..."
+          # Try to run the executable for up to 60 seconds
+          echo "Running application for up to 60 seconds to capture output..."
           # Prefer running the specific project if present
           if [[ -f "Rxxxxxxx.csproj" ]]; then
-            timeout 10s dotnet run --project Rxxxxxxx.csproj -c Release --no-build > app_output.txt 2>&1 || true
+            timeout 60s dotnet run --project Rxxxxxxx.csproj -c Release --no-build > app_output.txt 2>&1 || true
           else
             # Fallback: try running from solution
-            timeout 10s dotnet run -c Release --no-build > app_output.txt 2>&1 || true
+            timeout 60s dotnet run -c Release --no-build > app_output.txt 2>&1 || true
           fi
           echo "---BEGIN-OUTPUT---"
           cat app_output.txt | sed -e 's/\r$//'
@@ -52,7 +52,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TAG_NAME="${GITHUB_REF_NAME}"
+          RAW_TAG="${GITHUB_REF_NAME}"
+          TAG_NAME="${RAW_TAG#sample/}"
           echo "Preparing README update for tag: ${TAG_NAME}"
 
           # Read Program.cs and output

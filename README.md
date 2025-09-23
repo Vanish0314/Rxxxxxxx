@@ -105,7 +105,7 @@ Console.WriteLine(
 [B][T:7] 09/17/2025 14:24:43: Tick 8
 ```
 
-## sample/Delay操作符不延迟订阅而是延迟转发
+## Delay操作符不延迟订阅而是延迟转发
 ### 示例代码
 ```c#
 ﻿using System.Reactive;
