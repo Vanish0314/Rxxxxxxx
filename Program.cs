@@ -1,22 +1,21 @@
-﻿using System.Reactive;
+﻿using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 
-var source = Observable.Create<int>(observer =>
-{
-    // 模拟快速连续发射事件
-    observer.OnNext(1);
-    Thread.Sleep(200);
-    observer.OnNext(2);
-    Thread.Sleep(200);
-    observer.OnNext(3);
-    Thread.Sleep(1200); // 这里有足够的间隔
-    observer.OnNext(4);
-    observer.OnCompleted();
-    return () => { };
-});
+IObservable<long> source = Observable.Interval(TimeSpan.FromSeconds(1)).Take(5);
 
-source
-    .Throttle(TimeSpan.FromSeconds(1))
-    .Subscribe(x => Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} -> {x}"));
+Console.WriteLine("ForEachAsync start...");
+await source.ForEachAsync(i => Console.WriteLine($"received {i} @ {DateTime.Now}"));
+Console.WriteLine($"ForEachAsync finished @ {DateTime.Now}");
 
-Thread.Sleep(3000); // 保证序列执行完
+Console.WriteLine("Subscribe start...");
+source.Subscribe(i => Console.WriteLine($"Subscribe received {i} @ {DateTime.Now}"));
+Console.WriteLine($"Subscribe finished @ {DateTime.Now}");
+
+Console.WriteLine("Subscribe ImmediateScheduler start...");
+IObservable<long> source1 = Observable
+    .Interval(TimeSpan.FromSeconds(1), ImmediateScheduler.Instance)
+    .Take(5);
+source1.Subscribe(i =>
+    Console.WriteLine($"ImmediateScheduler subscriber received {i} @ {DateTime.Now}")
+);
+Console.WriteLine($"Subscribe ImmediateScheduler finished @ {DateTime.Now}");
