@@ -3,10 +3,6 @@
  * Copyright (c) 2025 Vanishing Games. All Rights Reserved.
  * @Author: VanishXiao
  * @Date: 2025-09-17 22:22:32
- * @LastEditTime: 2025-09-23 17:47:02
+ * @LastEditTime: 2025-09-23 18:24:18
  * --------------------------------------------------------------------------------
 -->
-
-# 解释
-
-根本问题在于，取消一个已调度的工作项的唯一方式是调用 Schedule 返回对象的 Dispose。而 ImmediateScheduler 按定义在完成工作之前不会返回，意味着它实际上不能支持取消。因此，Interval 调用实际上创建了一个无法取消、注定会无限运行的周期性工作项
