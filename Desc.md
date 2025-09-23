@@ -1,4 +1,12 @@
+<!--
+ * --------------------------------------------------------------------------------
+ * Copyright (c) 2025 Vanishing Games. All Rights Reserved.
+ * @Author: VanishXiao
+ * @Date: 2025-09-17 22:22:32
+ * @LastEditTime: 2025-09-23 16:51:58
+ * --------------------------------------------------------------------------------
+-->
 
-本示例展示 Rx.NET 中 SubscribeOn 与 Interval 调度器的关系：
-- **Scenario A** 使用 ImmediateScheduler，Tick 在 EventLoopScheduler 线程执行
-- **Scenario B** 使用默认线程池，Tick 在 ThreadPool 执行
+本示例展示 Rx.NET 中 Delay 运算符
+
+旨在说明: Delay被延迟的不是订阅本身, 而是**转发**到最终订阅者的过程
